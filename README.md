@@ -11,8 +11,8 @@ Each cipher was implemented by a different group member and lives in its own scr
 ## Files
 
 - [caesar_cipher.py](caesar_cipher.py) — Caesar cipher encrypt/decrypt
-- `reverse_cipher.py` — Reverse cipher encrypt/decrypt (TODO)
-- `vernam_cipher.py` — Vernam cipher encrypt/decrypt (TODO)
+- `reverse_cipher.py` — Reverse cipher encrypt/decrypt
+- `vernam_cipher.py` — Vernam cipher encrypt/decrypt
 
 ## Usage
 
