@@ -6,8 +6,6 @@ Write a Python program to encrypt/decrypt a text given the key/shift using:
 2. Reverse cipher
 3. Vernam cipher
 
-Each cipher was implemented by a different group member and lives in its own script.
-
 ## Files
 
 - [caesar_cipher.py](caesar_cipher.py) — Caesar cipher encrypt/decrypt
