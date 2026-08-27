@@ -35,3 +35,25 @@ Enter shift/key: 3
 Encrypt or Decrypt? (e/d): e
 Encrypted text: Khoor, Zruog!
 ```
+
+### Reverse cipher
+
+```
+python reverse_cipher.py
+```
+
+You'll be prompted for:
+- the text
+- whether to encrypt (`e`) or decrypt (`d`)
+
+No key/shift is used. The whole string is reversed, including spaces and punctuation. Encrypting twice (or encrypt then decrypt) restores the original text.
+
+Example:
+
+```
+Enter text: Hello, World!
+Encrypt or Decrypt? (e/d): e
+Encrypted text: !dlroW ,olleH
+```
+
+Decrypting `!dlroW ,olleH` gives `Hello, World!` again.
