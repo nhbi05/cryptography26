@@ -1,3 +1,6 @@
+# Group: NANSEREKO HOUSNAH (24/U/09631/EVE), SUUNA RAYMOND (24/U/11403/EVE),
+#        NABUKEERA SUMAYAH KASWA (24/U/07899/EVE)
+
 """Reverse Cipher: encrypt/decrypt text by reversing its characters.
 
 Encryption and decryption are the same operation: reverse the string.

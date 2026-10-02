@@ -1,5 +1,13 @@
 # Cryptography Assignment
 
+## Group Members
+
+| # | Name | Registration No. | Student No. |
+|---|------|-------------------|-------------|
+| 1 | NANSEREKO HOUSNAH | 24/U/09631/EVE | 2400709631 |
+| 2 | SUUNA RAYMOND | 24/U/11403/EVE | 2400711403 |
+| 3 | NABUKEERA SUMAYAH KASWA | 24/U/07899/EVE | 2400707899 |
+
 Write a Python program to encrypt/decrypt a text given the key/shift using:
 
 1. Caesar cipher

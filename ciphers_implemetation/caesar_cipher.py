@@ -1,3 +1,6 @@
+# Group: NANSEREKO HOUSNAH (24/U/09631/EVE), SUUNA RAYMOND (24/U/11403/EVE),
+#        NABUKEERA SUMAYAH KASWA (24/U/07899/EVE)
+
 """Caesar Cipher: encrypt/decrypt text using a shift key."""
 
 
