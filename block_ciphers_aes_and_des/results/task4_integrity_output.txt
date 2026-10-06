@@ -1,0 +1,34 @@
+============================================================
+Task 4: Integrity and Tampering
+============================================================
+Original message  : The quick brown fox jumps over the lazy dog!!
+Modified message  : The quick brown box jumps over the lazy dog!!
+Changed position  : index 16 ('f' -> 'b')
+HMAC key (hex)    : acd5ba8c6cc5268497a711b4495687ba2dce83004e32accb9e19b37b41264008
+
+--- SHA-256 ---
+Original          : e8af66642705ee57fa03c5af5043d78260528448ec429b95e7c2547db1e3716d
+Modified          : a77516c3a66ba61957b0e691cbe3058dc88d393e904f735a3216eb9f7a66cf5a
+Bits changed      : 142/256 (55.47%)
+
+--- HMAC-SHA256 ---
+Original tag      : 6c49e8a73508e7ebb8ae14aa22e03c69225a54759cf06363760a27190631e97b
+Modified tag      : 5ef97473e043fdeb60a0f732449d9e107efe6165c042e6ef78245ab91ba1ed01
+Bits changed      : 112/256 (43.75%)
+
+--- HMAC verification (receiver holds the key) ---
+Original message + original tag : PASS
+Modified message + original tag : FAIL
+
+--- Attacker modifies the message and replaces the checksum ---
+Attacker's SHA-256  : a77516c3a66ba61957b0e691cbe3058dc88d393e904f735a3216eb9f7a66cf5a
+Receiver hash check : PASS (tampering NOT detected)
+Attacker's HMAC tag : 78030f5b61be0a814821241bd43b4f18a1a583039104eeb9911729cc8821cba5
+Receiver HMAC check : FAIL (tampering detected)
+
+--- Summary ---
+One changed character changes about half the bits of both outputs.
+HMAC verifies the original message and rejects the modified one.
+A plain hash can be recomputed by anyone, so it cannot prove who
+sent the message. HMAC needs the secret key, so only a key holder
+can produce a valid tag: it gives integrity AND authentication.
