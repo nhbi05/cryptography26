@@ -1,6 +1,6 @@
 # Task 1: Theory and Cipher Design (10 marks)
 
-**Owner:** Member 1: [Name / Registration Number]
+**Owner:** NABUKEERA SUMAYAH KASWA (24/U/07899/EVE)
 
 Write concise answers in your own words.
 

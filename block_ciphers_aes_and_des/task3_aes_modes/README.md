@@ -1,6 +1,6 @@
 # Task 3: AES Modes in Practice (10 marks)
 
-**Owner:** Member 2: [Name / Registration Number]
+**Owner:** NANSEREKO HOUSNAH (24/U/09631/EVE)
 
 ## What to do
 

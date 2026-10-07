@@ -1,0 +1,25 @@
+============================================================
+Task 3: AES Modes in Practice
+============================================================
+Message           : The quick brown fox jumps over the lazy dog!!
+Message length    : 45 bytes
+Key (hex)         : c846c6c8150d7115b7a405df49f529afb64f79e908f83dd176bebedb5c2b802c
+
+--- AES-CBC ---
+IV (hex)          : e67536c42a52961142c0354f800e0cc6
+Ciphertext (hex)  : 77df3b718be62e6335fc94babd5ad9dcf9b11ffb73a9f04455bab7812d24faa9c311145a022e230348d90e9c53eeb30d
+Ciphertext length : 48 bytes
+Recovered         : The quick brown fox jumps over the lazy dog!!
+Exact match       : True
+
+--- AES-CTR ---
+Nonce (hex)       : c4bac638200e4d4b33e62df2cd11b754
+Ciphertext (hex)  : 9ef68c78ea5ddacc001329edc75fcb4e7386dd2c36b0186b1ea95adcbd1e3d209bc4e6d0fb7e7873bec32607a8
+Ciphertext length : 45 bytes
+Recovered         : The quick brown fox jumps over the lazy dog!!
+Exact match       : True
+
+--- Summary ---
+CBC ciphertext length: 48 bytes (padded from 45 to a multiple of 16)
+CTR ciphertext length: 45 bytes (same as plaintext, no padding)
+Both plaintexts recovered exactly: PASS

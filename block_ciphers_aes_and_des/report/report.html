@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Block Ciphers, AES and Integrity: Group Report</title>
+<style>
+  @page { size: A4; margin: 18mm 17mm; }
+  body { font-family: "Times New Roman", Georgia, serif; font-size: 11.5pt;
+         line-height: 1.45; color: #111; background: #fff; }
+  h1 { font-size: 20pt; margin: 0 0 4px; text-align: center; }
+  h2 { font-size: 14pt; color: #8b1a1a; border-bottom: 1px solid #8b1a1a;
+        padding-bottom: 2px; margin-top: 22px; }
+  h3 { font-size: 12pt; margin: 14px 0 4px; }
+  .sub { text-align: center; margin: 0; }
+  .cover { margin-bottom: 18px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 10.5pt; }
+  th, td { border: 1px solid #555; padding: 4px 7px; text-align: left; vertical-align: top; }
+  th { background: #eee; }
+  code, .hex { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; }
+  .hex { word-break: break-all; }
+  h2, h3, h2 + p { break-after: avoid; }
+  pre.code, pre.out { font-family: Consolas, "Courier New", monospace; font-size: 8.3pt;
+        line-height: 1.3; background: #f4f4f4; border: 1px solid #999; padding: 7px;
+        white-space: pre-wrap; word-break: break-all; }
+  pre { break-inside: auto; }
+  .todo { background: #ffef9e; font-weight: bold; }
+  .pagebreak { break-before: page; }
+  .note { font-size: 10pt; color: #333; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+<h1>Block Ciphers, AES and Integrity</h1>
+<p class="sub"><b>CSC 3114: Cryptology and Coding Theory</b>, Take-Home Assignment (Test 2)</p>
+<p class="sub">Submitted: 7 October 2026</p>
+
+<h2>Group Members: Group 4</h2>
+<table>
+<tr><th>#</th><th>Name</th><th>Registration No.</th><th>Student No.</th><th>Tasks</th></tr>
+<tr><td>1</td><td>NANSEREKO HOUSNAH</td><td>24/U/09631/EVE</td><td>2400709631</td><td>Task 3 (AES Modes)</td></tr>
+<tr><td>2</td><td>SUUNA RAYMOND</td><td>24/U/11403/EVE</td><td>2400711403</td><td>Task 4 (Integrity), Task 5 (Reflection &amp; Video)</td></tr>
+<tr><td>3</td><td>NABUKEERA SUMAYAH KASWA</td><td>24/U/07899/EVE</td><td>2400707899</td><td>Task 1 (Theory), Task 2 (Avalanche)</td></tr>
+</table>
+
+<p><b>Video presentation:</b> <a href="https://drive.google.com/file/d/1TARreFrYcpibNIpK1Uo6iej6iJCPtoCY/view?usp=sharing">https://drive.google.com/file/d/1TARreFrYcpibNIpK1Uo6iej6iJCPtoCY/view?usp=sharing</a></p>
+<p><b>Language and libraries:</b> Python 3; PyCryptodome (Task 2), PyCA
+<code>cryptography</code> (Task 3), and the standard library <code>hashlib</code>,
+<code>hmac</code> and <code>os</code> (Task 4). Full code listings and program outputs
+are in the Appendix.</p>
+</div>
+
+<h2>Task 1: Theory and Cipher Design</h2>
+
+<h3>a) Confusion, diffusion and the avalanche effect</h3>
+<p><b>Confusion</b> makes the relationship between the encryption key and the ciphertext
+complex, so it is difficult for an attacker to work out the key from the ciphertext. In
+AES, <b>SubBytes</b> provides confusion by replacing each byte using a non-linear
+substitution table, the S-box.</p>
+<p><b>Diffusion</b> spreads the effect of one plaintext bit across many ciphertext bits,
+so patterns in the original message are hard to recognise. In AES, <b>ShiftRows</b> and
+<b>MixColumns</b> provide diffusion by rearranging and mixing the data across the state.</p>
+<p>The <b>avalanche effect</b> means that a small change in the input, such as one
+plaintext bit, should change many bits of the ciphertext. AES achieves this through
+repeated rounds of substitution, shifting, mixing and key addition. Ideally, changing one
+bit changes about half of the ciphertext bits. Task 2 confirms this experimentally.</p>
+
+<h3>b) DES vs AES</h3>
+<table>
+<tr><th>Property</th><th>DES</th><th>AES</th></tr>
+<tr><td>Block size</td><td>64 bits</td><td>128 bits</td></tr>
+<tr><td>Key size</td><td>56 effective bits (64 with parity)</td><td>128, 192 or 256 bits</td></tr>
+<tr><td>Number of rounds</td><td>16</td><td>10, 12 or 14 (by key size)</td></tr>
+<tr><td>Cipher structure</td><td>Feistel network</td><td>Substitution-permutation network</td></tr>
+<tr><td>Present-day security</td><td>Insecure: the 56-bit key is too small and can be brute-forced</td>
+    <td>Secure when properly implemented with an appropriate key size</td></tr>
+</table>
+
+<h3>c) ECB vs CBC vs CTR</h3>
+<p><b>ECB (Electronic Codebook):</b> each plaintext block is encrypted independently, so
+identical plaintext blocks give identical ciphertext blocks under the same key. This
+reveals patterns, which makes ECB unsuitable for most applications.</p>
+<p><b>CBC (Cipher Block Chaining):</b> each plaintext block is XORed with the previous
+ciphertext block before encryption. CBC needs an IV so that identical plaintexts do not
+produce identical ciphertexts, and it needs padding to fill whole blocks.</p>
+<p><b>CTR (Counter):</b> AES encrypts a nonce and counter to produce a keystream, which is
+XORed with the plaintext. It needs no padding and can encrypt data of any length.</p>
+<p><b>Purpose of an IV/nonce:</b> it gives each encryption a fresh starting value, so
+encrypting the same plaintext with the same key does not produce the same ciphertext.</p>
+<p><b>Misuse to avoid:</b> a nonce must <b>never be reused with the same key in CTR
+mode</b>. Reuse produces the same keystream and exposes the XOR of the plaintexts,
+which seriously weakens security.</p>
+
+<h2>Task 2: Python Avalanche Experiment</h2>
+<p>Using AES-128 with a fixed key (<code>1234567890abcdef</code>), we encrypted the
+16-byte block <code>Sixteen byte txt</code>. We then flipped one plaintext bit at a time
+(bits 0 to 9), encrypted again with the same key, and counted the ciphertext bits that
+changed out of 128.</p>
+<table>
+<tr><th>Trial</th><th>Bit flipped</th><th>Bits changed (of 128)</th><th>% changed</th></tr>
+<tr><td>1</td><td>0</td><td>59</td><td>46.09%</td></tr>
+<tr><td>2</td><td>1</td><td>63</td><td>49.22%</td></tr>
+<tr><td>3</td><td>2</td><td>59</td><td>46.09%</td></tr>
+<tr><td>4</td><td>3</td><td>68</td><td>53.12%</td></tr>
+<tr><td>5</td><td>4</td><td>73</td><td>57.03%</td></tr>
+<tr><td>6</td><td>5</td><td>64</td><td>50.00%</td></tr>
+<tr><td>7</td><td>6</td><td>64</td><td>50.00%</td></tr>
+<tr><td>8</td><td>7</td><td>59</td><td>46.09%</td></tr>
+<tr><td>9</td><td>8</td><td>66</td><td>51.56%</td></tr>
+<tr><td>10</td><td>9</td><td>64</td><td>50.00%</td></tr>
+<tr><th colspan="2">Average</th><th>63.9</th><th>49.92%</th></tr>
+</table>
+<p><b>Interpretation.</b> On average, flipping a single plaintext bit changed
+<b>63.9 of 128 bits (49.92%)</b>, very close to the ideal 50%.
+Every trial fell between 46.09% and 57.03%, so the behaviour is
+consistent and no bit position is weak. This is the avalanche effect produced by AES's
+confusion and diffusion. For security, it means the ciphertexts of two almost identical
+plaintexts look unrelated, so an attacker learns nothing about how similar the inputs
+were and cannot recover the key or plaintext by making small changes and watching the
+output.</p>
+
+<h2>Task 3: AES Modes in Practice</h2>
+<p>We used the PyCA <code>cryptography</code> library with a fresh random AES-256 key.
+The message was <code>The quick brown fox jumps over the lazy dog!!</code> (45 characters / 45 bytes). CBC used a
+fresh random 16-byte IV with PKCS7 padding. CTR used a fresh random 16-byte nonce/counter
+block with no padding. The values below come from the saved run in Appendix A.2. The key,
+IV and nonce are random, so the hex values differ on every run, but the lengths do not.</p>
+<table>
+<tr><th></th><th>AES-CBC</th><th>AES-CTR</th></tr>
+<tr><td>IV / nonce (hex)</td><td class="hex">e67536c42a52961142c0354f800e0cc6</td><td class="hex">c4bac638200e4d4b33e62df2cd11b754</td></tr>
+<tr><td>Plaintext length</td><td>45 bytes</td><td>45 bytes</td></tr>
+<tr><td>Ciphertext length</td><td>48 bytes</td><td>45 bytes</td></tr>
+<tr><td>Ciphertext (hex)</td><td class="hex">77df3b718be62e6335fc94babd5ad9dcf9b11ffb73a9f04455bab7812d24faa9c311145a022e230348d90e9c53eeb30d</td><td class="hex">9ef68c78ea5ddacc001329edc75fcb4e7386dd2c36b0186b1ea95adcbd1e3d209bc4e6d0fb7e7873bec32607a8</td></tr>
+<tr><td>Recovered plaintext matches exactly?</td><td>True</td><td>True</td></tr>
+</table>
+<p>The script compares each recovered plaintext with the original using <code>==</code>
+and stops with an error if either does not match. Both passed.</p>
+
+<h3>Observations comparing CBC and CTR</h3>
+<ol>
+<li><b>Padding and ciphertext length.</b> CBC works on whole 16-byte blocks, so the
+45-byte message was PKCS7-padded to 48 bytes (3 blocks), and the ciphertext is longer than
+the plaintext. CTR turns AES into a stream cipher: it XORs the plaintext with a keystream
+made by encrypting the counter, so it needs no padding and the ciphertext is exactly 45
+bytes. Neither mode hides the message length.</li>
+<li><b>Parallelism.</b> CBC encryption is sequential, because each block is XORed with the
+previous ciphertext block before encryption (CBC decryption can run in parallel). In CTR
+every block uses its own counter value, so encryption and decryption can both run in
+parallel, and any block can be decrypted on its own.</li>
+<li><b>IV/nonce reuse.</b> Reusing a CTR nonce with the same key repeats the keystream,
+so XORing two ciphertexts gives the XOR of the two plaintexts. This is catastrophic.
+Reusing a CBC IV is also wrong but milder: it reveals when two messages begin with the
+same blocks. Both modes here use a fresh random value on every encryption.</li>
+<li><b>Error propagation and malleability.</b> Flipping one bit of a CBC ciphertext block
+garbles that whole plaintext block and flips the same bit in the next block. In CTR it
+flips exactly one plaintext bit, so an attacker can make precise changes without knowing
+the key. Neither mode provides integrity, which motivates Task 4.</li>
+</ol>
+
+<h2>Task 4: Integrity and Tampering</h2>
+<p>We computed a SHA-256 hash and an HMAC-SHA256 tag (with a fresh 32-byte random key) for
+the original message, then changed one character, <code>fox</code> to <code>box</code>
+(index 16, <code>f</code> to <code>b</code>), and recomputed both. Values are from the saved
+run in Appendix A.3.</p>
+<table>
+<tr><th></th><th>Original message</th><th>Modified message</th></tr>
+<tr><td>Message</td><td><code>The quick brown fox jumps over the lazy dog!!</code></td>
+    <td><code>The quick brown box jumps over the lazy dog!!</code></td></tr>
+<tr><td>SHA-256</td><td class="hex">e8af66642705ee57fa03c5af5043d78260528448ec429b95e7c2547db1e3716d</td><td class="hex">a77516c3a66ba61957b0e691cbe3058dc88d393e904f735a3216eb9f7a66cf5a</td></tr>
+<tr><td>HMAC-SHA256</td><td class="hex">6c49e8a73508e7ebb8ae14aa22e03c69225a54759cf06363760a27190631e97b</td><td class="hex">5ef97473e043fdeb60a0f732449d9e107efe6165c042e6ef78245ab91ba1ed01</td></tr>
+<tr><td>HMAC verification against the original tag</td><td><b>PASS</b></td><td><b>FAIL</b></td></tr>
+</table>
+
+<p><b>How the digest/tag changed.</b> One changed character flipped
+<b>142/256 (55.47%)</b> of the SHA-256 digest bits and <b>112/256 (43.75%)</b> of the HMAC tag
+bits. The outputs look completely unrelated, which is the avalanche effect again, so no one
+can tell from the outputs how similar the two messages were.</p>
+
+<p><b>Verification.</b> The receiver, who holds the key, recomputes the tag and compares it
+in constant time with <code>hmac.compare_digest</code>. The original message verifies
+(<b>PASS</b>) and the modified message is rejected (<b>FAIL</b>).</p>
+
+<p><b>Why a plain hash does not authenticate the sender.</b> SHA-256 uses no secret, so
+anyone can compute it, including an attacker. If a sender transmits the message together
+with its SHA-256 hash, an attacker in the middle can change the message, recompute the hash
+and replace it. The receiver's check then passes and the forgery is accepted. Our run shows
+this: the attacker's recomputed hash passed the receiver's check (<i>tampering NOT
+detected</i>). A plain hash only detects accidental corruption.</p>
+
+<p><b>Why HMAC provides integrity and authentication.</b> HMAC mixes a secret key into the
+hash, so only someone who holds the key can produce a valid tag. An attacker without the
+key cannot compute a matching tag for a changed message. In our run, the attacker's tag
+failed verification (<i>tampering detected</i>). A valid tag therefore shows that the
+message was not changed (<b>integrity</b>) and that it came from a holder of the shared key
+(<b>authentication</b>). HMAC does not give non-repudiation, because both parties share
+the key. That would need a digital signature.</p>
+
+<h2>Task 5: Reflection</h2>
+<p><b>The most important security lesson we learned:</b></p>
+
+<p>The most important lesson we learned is that a strong cipher does not make a
+system secure on its own. How it is used matters just as much.</p>
+<p>Our avalanche experiment showed that AES itself is very strong. Flipping a single
+plaintext bit changed 49.9% of the ciphertext bits on average, almost exactly the ideal
+50%. But Task 3 showed that this strength depends on correct use. AES-CBC and AES-CTR
+both recovered our message exactly, and each encryption used a fresh random IV or nonce,
+so the same message never produced the same ciphertext. Reusing a CTR nonce with the
+same key would reveal the XOR of two plaintexts without anyone breaking AES. We also saw
+that encryption only hides content. Neither mode detects a modified ciphertext, and CTR
+even lets an attacker flip chosen plaintext bits.</p>
+<p>Task 4 completed the picture. An attacker defeated a plain SHA-256 hash simply by
+recomputing it, but HMAC-SHA256 rejected the tampered message because the attacker
+did not have the secret key.</p>
+<p>Secure communication therefore needs confidentiality and integrity together, plus
+careful handling of keys, IVs and nonces. This is why authenticated encryption such as
+AES-GCM is preferred in practice.</p>
+
+
+<p><b>Video presentation:</b> <a href="https://drive.google.com/file/d/1TARreFrYcpibNIpK1Uo6iej6iJCPtoCY/view?usp=sharing">https://drive.google.com/file/d/1TARreFrYcpibNIpK1Uo6iej6iJCPtoCY/view?usp=sharing</a><br>
+<span class="note">The video (5 minutes or less) includes all group members, shows each
+program running, and explains the security meaning of the results.</span></p>
+
+<h2 class="pagebreak">Appendix: Code and Program Output</h2>
+<p class="note">To reproduce: <code>pip install -r requirements.txt</code>, then
+run each script from the <code>block_ciphers_aes_and_des</code> folder.</p>
+
+<h3>A.1 Task 2: <code>task2_avalanche/avalanche.py</code></h3>
+<pre class="code">from Crypto.Cipher import AES
+
+
+# --------------------------------------------------
+# 1. AES-128 key
+# AES-128 requires a 16-byte key
+# --------------------------------------------------
+
+key = b&quot;1234567890abcdef&quot;
+
+
+# --------------------------------------------------
+# 2. 16-byte plaintext
+# --------------------------------------------------
+
+plaintext = b&quot;Sixteen byte txt&quot;
+
+
+# Check that the plaintext is exactly 16 bytes
+print(&quot;Plaintext:&quot;, plaintext)
+print(&quot;Plaintext length:&quot;, len(plaintext), &quot;bytes&quot;)
+
+
+# --------------------------------------------------
+# 3. Encrypt one 16-byte block
+# --------------------------------------------------
+
+def encrypt_block(data: bytes) -&gt; bytes:
+    cipher = AES.new(key, AES.MODE_ECB)
+    return cipher.encrypt(data)
+
+
+# --------------------------------------------------
+# 4. Flip exactly one bit
+# --------------------------------------------------
+
+def flip_bit(data: bytes, bit_index: int) -&gt; bytes:
+    b = bytearray(data)
+
+    byte_i, offset = divmod(bit_index, 8)
+
+    b[byte_i] ^= (1 &lt;&lt; offset)
+
+    return bytes(b)
+
+
+# --------------------------------------------------
+# 5. Count how many ciphertext bits changed
+# --------------------------------------------------
+
+def count_changed_bits(x: bytes, y: bytes) -&gt; int:
+    return sum(
+        (a ^ b).bit_count()
+        for a, b in zip(x, y)
+    )
+
+
+# --------------------------------------------------
+# 6. Perform one avalanche trial
+# --------------------------------------------------
+
+def avalanche_trial(encrypt_block, plaintext: bytes, bit_index: int):
+
+    # Encrypt the original plaintext
+    c1 = encrypt_block(plaintext)
+
+    # Flip exactly one bit and encrypt again
+    c2 = encrypt_block(
+        flip_bit(plaintext, bit_index)
+    )
+
+    # Count changed ciphertext bits
+    return count_changed_bits(c1, c2)
+
+
+# --------------------------------------------------
+# 7. Encrypt the original plaintext
+# --------------------------------------------------
+
+original_ciphertext = encrypt_block(plaintext)
+
+print(&quot;\nOriginal ciphertext:&quot;)
+print(original_ciphertext.hex())
+
+
+# --------------------------------------------------
+# 8. Run at least 10 different single-bit flips
+# --------------------------------------------------
+
+bit_positions = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+results = []
+
+
+for bit_index in bit_positions:
+
+    changed_bits = avalanche_trial(
+        encrypt_block,
+        plaintext,
+        bit_index
+    )
+
+    percentage = (changed_bits / 128) * 100
+
+    results.append(
+        (bit_index, changed_bits, percentage)
+    )
+
+
+# --------------------------------------------------
+# 9. Display the results
+# --------------------------------------------------
+
+print(&quot;\nAES-128 Avalanche Experiment&quot;)
+print(&quot;-&quot; * 50)
+
+print(
+    f&quot;{&#x27;Bit Flipped&#x27;:&lt;15}&quot;
+    f&quot;{&#x27;Changed Bits&#x27;:&lt;15}&quot;
+    f&quot;{&#x27;Percentage&#x27;:&lt;15}&quot;
+)
+
+for bit_index, changed_bits, percentage in results:
+
+    print(
+        f&quot;{bit_index:&lt;15}&quot;
+        f&quot;{changed_bits:&lt;15}&quot;
+        f&quot;{percentage:.2f}%&quot;
+    )
+
+
+# --------------------------------------------------
+# 10. Calculate the average
+# --------------------------------------------------
+
+average_changed_bits = (
+    sum(result[1] for result in results)
+    / len(results)
+)
+
+average_percentage = (
+    average_changed_bits / 128
+) * 100
+
+
+print(&quot;\nAverage changed ciphertext bits:&quot;,
+      round(average_changed_bits, 2))
+
+print(&quot;Average percentage of changed ciphertext bits:&quot;,
+      round(average_percentage, 2), &quot;%&quot;)</pre>
+<p><b>Output</b> (<code>results/task2_avalanche_output.txt</code>):</p>
+<pre class="out">Plaintext: b&#x27;Sixteen byte txt&#x27;
+Plaintext length: 16 bytes
+
+Original ciphertext:
+9b3f58d7dd6a907062594e39ce8d0451
+
+AES-128 Avalanche Experiment
+--------------------------------------------------
+Bit Flipped    Changed Bits   Percentage     
+0              59             46.09%
+1              63             49.22%
+2              59             46.09%
+3              68             53.12%
+4              73             57.03%
+5              64             50.00%
+6              64             50.00%
+7              59             46.09%
+8              66             51.56%
+9              64             50.00%
+
+Average changed ciphertext bits: 63.9
+Average percentage of changed ciphertext bits: 49.92 %</pre>
+
+<h3>A.2 Task 3: <code>task3_aes_modes/aes_modes.py</code></h3>
+<pre class="code"># Task 3: AES Modes in Practice (CBC and CTR)
+
+
+
+import os
+
+from cryptography.hazmat.primitives import padding
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+
+BLOCK_SIZE = 16  # AES block size in bytes (128 bits)
+
+# Message of at least 40 characters (45 bytes, so CBC padding is visible)
+MESSAGE = b&quot;The quick brown fox jumps over the lazy dog!!&quot;
+
+
+def aes_cbc_encrypt(key: bytes, plaintext: bytes):
+    # Fresh random IV for every encryption
+    iv = os.urandom(BLOCK_SIZE)
+
+    # PKCS7 pad the plaintext to a multiple of the block size
+    padder = padding.PKCS7(BLOCK_SIZE * 8).padder()
+    padded = padder.update(plaintext) + padder.finalize()
+
+    # Encrypt with AES-CBC
+    encryptor = Cipher(algorithms.AES(key), modes.CBC(iv)).encryptor()
+    ciphertext = encryptor.update(padded) + encryptor.finalize()
+
+    return iv, ciphertext
+
+
+def aes_cbc_decrypt(key: bytes, iv: bytes, ciphertext: bytes):
+    # Decrypt with AES-CBC using the same IV
+    decryptor = Cipher(algorithms.AES(key), modes.CBC(iv)).decryptor()
+    padded = decryptor.update(ciphertext) + decryptor.finalize()
+
+    # Remove the PKCS7 padding
+    unpadder = padding.PKCS7(BLOCK_SIZE * 8).unpadder()
+    plaintext = unpadder.update(padded) + unpadder.finalize()
+
+    return plaintext
+
+
+def aes_ctr_roundtrip(key: bytes, plaintext: bytes):
+    # Fresh random 16-byte initial counter block (nonce + counter)
+    nonce = os.urandom(BLOCK_SIZE)
+
+    # Encrypt with AES-CTR (no padding needed, it acts as a stream cipher)
+    encryptor = Cipher(algorithms.AES(key), modes.CTR(nonce)).encryptor()
+    ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+
+    # Decrypt with AES-CTR using the same nonce
+    decryptor = Cipher(algorithms.AES(key), modes.CTR(nonce)).decryptor()
+    recovered = decryptor.update(ciphertext) + decryptor.finalize()
+
+    return nonce, ciphertext, recovered
+
+
+if __name__ == &quot;__main__&quot;:
+    # AES-256 key
+    key = os.urandom(32)
+
+    print(&quot;=&quot; * 60)
+    print(&quot;Task 3: AES Modes in Practice&quot;)
+    print(&quot;=&quot; * 60)
+    print(f&quot;Message           : {MESSAGE.decode()}&quot;)
+    print(f&quot;Message length    : {len(MESSAGE)} bytes&quot;)
+    print(f&quot;Key (hex)         : {key.hex()}&quot;)
+
+    # CBC encrypt + decrypt
+    iv, cbc_ct = aes_cbc_encrypt(key, MESSAGE)
+    cbc_pt = aes_cbc_decrypt(key, iv, cbc_ct)
+    cbc_ok = cbc_pt == MESSAGE
+
+    print(&quot;\n--- AES-CBC ---&quot;)
+    print(f&quot;IV (hex)          : {iv.hex()}&quot;)
+    print(f&quot;Ciphertext (hex)  : {cbc_ct.hex()}&quot;)
+    print(f&quot;Ciphertext length : {len(cbc_ct)} bytes&quot;)
+    print(f&quot;Recovered         : {cbc_pt.decode()}&quot;)
+    print(f&quot;Exact match       : {cbc_ok}&quot;)
+
+    # CTR encrypt + decrypt
+    nonce, ctr_ct, ctr_pt = aes_ctr_roundtrip(key, MESSAGE)
+    ctr_ok = ctr_pt == MESSAGE
+
+    print(&quot;\n--- AES-CTR ---&quot;)
+    print(f&quot;Nonce (hex)       : {nonce.hex()}&quot;)
+    print(f&quot;Ciphertext (hex)  : {ctr_ct.hex()}&quot;)
+    print(f&quot;Ciphertext length : {len(ctr_ct)} bytes&quot;)
+    print(f&quot;Recovered         : {ctr_pt.decode()}&quot;)
+    print(f&quot;Exact match       : {ctr_ok}&quot;)
+
+    # Verify both recovered plaintexts exactly match the original
+    assert cbc_ok, &quot;CBC round trip failed&quot;
+    assert ctr_ok, &quot;CTR round trip failed&quot;
+
+    print(&quot;\n--- Summary ---&quot;)
+    print(f&quot;CBC ciphertext length: {len(cbc_ct)} bytes &quot;
+          f&quot;(padded from {len(MESSAGE)} to a multiple of {BLOCK_SIZE})&quot;)
+    print(f&quot;CTR ciphertext length: {len(ctr_ct)} bytes &quot;
+          f&quot;(same as plaintext, no padding)&quot;)
+    print(&quot;Both plaintexts recovered exactly: PASS&quot;)</pre>
+<p><b>Output</b> (<code>results/task3_aes_modes_output.txt</code>):</p>
+<pre class="out">============================================================
+Task 3: AES Modes in Practice
+============================================================
+Message           : The quick brown fox jumps over the lazy dog!!
+Message length    : 45 bytes
+Key (hex)         : c846c6c8150d7115b7a405df49f529afb64f79e908f83dd176bebedb5c2b802c
+
+--- AES-CBC ---
+IV (hex)          : e67536c42a52961142c0354f800e0cc6
+Ciphertext (hex)  : 77df3b718be62e6335fc94babd5ad9dcf9b11ffb73a9f04455bab7812d24faa9c311145a022e230348d90e9c53eeb30d
+Ciphertext length : 48 bytes
+Recovered         : The quick brown fox jumps over the lazy dog!!
+Exact match       : True
+
+--- AES-CTR ---
+Nonce (hex)       : c4bac638200e4d4b33e62df2cd11b754
+Ciphertext (hex)  : 9ef68c78ea5ddacc001329edc75fcb4e7386dd2c36b0186b1ea95adcbd1e3d209bc4e6d0fb7e7873bec32607a8
+Ciphertext length : 45 bytes
+Recovered         : The quick brown fox jumps over the lazy dog!!
+Exact match       : True
+
+--- Summary ---
+CBC ciphertext length: 48 bytes (padded from 45 to a multiple of 16)
+CTR ciphertext length: 45 bytes (same as plaintext, no padding)
+Both plaintexts recovered exactly: PASS</pre>
+
+<h3>A.3 Task 4: <code>task4_integrity/integrity.py</code></h3>
+<pre class="code"># Task 4: Integrity and Tampering (SHA-256 and HMAC-SHA256)
+# Owner: Member 3
+
+import hashlib
+import hmac
+import os
+
+# Same message as Task 3
+MESSAGE = b&quot;The quick brown fox jumps over the lazy dog!!&quot;
+
+# Tampered copy with exactly ONE character changed (&quot;fox&quot; -&gt; &quot;box&quot;)
+TAMPER_INDEX = MESSAGE.index(b&quot;fox&quot;)
+MODIFIED = MESSAGE[:TAMPER_INDEX] + b&quot;b&quot; + MESSAGE[TAMPER_INDEX + 1:]
+
+
+def sha256_digest(message: bytes) -&gt; str:
+    return hashlib.sha256(message).hexdigest()
+
+
+def make_hmac(key: bytes, message: bytes) -&gt; bytes:
+    return hmac.new(key, message, hashlib.sha256).digest()
+
+
+def verify_hmac(key: bytes, message: bytes, tag: bytes) -&gt; bool:
+    # Recompute the tag and compare in constant time
+    expected = make_hmac(key, message)
+    return hmac.compare_digest(expected, tag)
+
+
+def count_changed_bits(x: bytes, y: bytes) -&gt; int:
+    return sum((a ^ b).bit_count() for a, b in zip(x, y))
+
+
+if __name__ == &quot;__main__&quot;:
+    # Secret key shared only by the sender and the receiver
+    key = os.urandom(32)
+
+    print(&quot;=&quot; * 60)
+    print(&quot;Task 4: Integrity and Tampering&quot;)
+    print(&quot;=&quot; * 60)
+    print(f&quot;Original message  : {MESSAGE.decode()}&quot;)
+    print(f&quot;Modified message  : {MODIFIED.decode()}&quot;)
+    print(f&quot;Changed position  : index {TAMPER_INDEX} &quot;
+          f&quot;(&#x27;{chr(MESSAGE[TAMPER_INDEX])}&#x27; -&gt; &#x27;{chr(MODIFIED[TAMPER_INDEX])}&#x27;)&quot;)
+    print(f&quot;HMAC key (hex)    : {key.hex()}&quot;)
+
+    # Digest and tag of the original message
+    orig_hash = sha256_digest(MESSAGE)
+    orig_tag = make_hmac(key, MESSAGE)
+
+    # Digest and tag of the modified message
+    mod_hash = sha256_digest(MODIFIED)
+    mod_tag = make_hmac(key, MODIFIED)
+
+    # How the digest and tag change after tampering
+    hash_bits = count_changed_bits(bytes.fromhex(orig_hash), bytes.fromhex(mod_hash))
+    tag_bits = count_changed_bits(orig_tag, mod_tag)
+
+    print(&quot;\n--- SHA-256 ---&quot;)
+    print(f&quot;Original          : {orig_hash}&quot;)
+    print(f&quot;Modified          : {mod_hash}&quot;)
+    print(f&quot;Bits changed      : {hash_bits}/256 ({hash_bits / 256:.2%})&quot;)
+
+    print(&quot;\n--- HMAC-SHA256 ---&quot;)
+    print(f&quot;Original tag      : {orig_tag.hex()}&quot;)
+    print(f&quot;Modified tag      : {mod_tag.hex()}&quot;)
+    print(f&quot;Bits changed      : {tag_bits}/256 ({tag_bits / 256:.2%})&quot;)
+
+    # Receiver checks the original message against the original tag
+    ok_original = verify_hmac(key, MESSAGE, orig_tag)
+    # Receiver checks the tampered message against the original tag
+    ok_modified = verify_hmac(key, MODIFIED, orig_tag)
+
+    print(&quot;\n--- HMAC verification (receiver holds the key) ---&quot;)
+    print(f&quot;Original message + original tag : {&#x27;PASS&#x27; if ok_original else &#x27;FAIL&#x27;}&quot;)
+    print(f&quot;Modified message + original tag : {&#x27;PASS&#x27; if ok_modified else &#x27;FAIL&#x27;}&quot;)
+
+    # Why a plain hash does not authenticate the sender:
+    # an attacker who changes the message can simply recompute SHA-256,
+    # because SHA-256 needs no secret. The receiver&#x27;s hash check then passes.
+    forged_hash = sha256_digest(MODIFIED)
+    # Receiver hashes what arrived and compares it with the attached hash
+    hash_check = sha256_digest(MODIFIED) == forged_hash
+
+    # The attacker cannot do the same with HMAC: without the secret key,
+    # any tag they make (here, with a guessed key) fails verification.
+    attacker_key = os.urandom(32)
+    forged_tag = make_hmac(attacker_key, MODIFIED)
+    forged_ok = verify_hmac(key, MODIFIED, forged_tag)
+
+    print(&quot;\n--- Attacker modifies the message and replaces the checksum ---&quot;)
+    print(f&quot;Attacker&#x27;s SHA-256  : {forged_hash}&quot;)
+    print(f&quot;Receiver hash check : {&#x27;PASS (tampering NOT detected)&#x27; if hash_check else &#x27;FAIL&#x27;}&quot;)
+    print(f&quot;Attacker&#x27;s HMAC tag : {forged_tag.hex()}&quot;)
+    print(f&quot;Receiver HMAC check : {&#x27;PASS&#x27; if forged_ok else &#x27;FAIL (tampering detected)&#x27;}&quot;)
+
+    assert orig_hash != mod_hash, &quot;SHA-256 digest did not change&quot;
+    assert orig_tag != mod_tag, &quot;HMAC tag did not change&quot;
+    assert ok_original, &quot;HMAC should verify for the original message&quot;
+    assert not ok_modified, &quot;HMAC should fail for the modified message&quot;
+    assert hash_check, &quot;Recomputed plain hash should match&quot;
+    assert not forged_ok, &quot;Forged HMAC should fail without the key&quot;
+
+    print(&quot;\n--- Summary ---&quot;)
+    print(&quot;One changed character changes about half the bits of both outputs.&quot;)
+    print(&quot;HMAC verifies the original message and rejects the modified one.&quot;)
+    print(&quot;A plain hash can be recomputed by anyone, so it cannot prove who&quot;)
+    print(&quot;sent the message. HMAC needs the secret key, so only a key holder&quot;)
+    print(&quot;can produce a valid tag: it gives integrity AND authentication.&quot;)</pre>
+<p><b>Output</b> (<code>results/task4_integrity_output.txt</code>):</p>
+<pre class="out">============================================================
+Task 4: Integrity and Tampering
+============================================================
+Original message  : The quick brown fox jumps over the lazy dog!!
+Modified message  : The quick brown box jumps over the lazy dog!!
+Changed position  : index 16 (&#x27;f&#x27; -&gt; &#x27;b&#x27;)
+HMAC key (hex)    : acd5ba8c6cc5268497a711b4495687ba2dce83004e32accb9e19b37b41264008
+
+--- SHA-256 ---
+Original          : e8af66642705ee57fa03c5af5043d78260528448ec429b95e7c2547db1e3716d
+Modified          : a77516c3a66ba61957b0e691cbe3058dc88d393e904f735a3216eb9f7a66cf5a
+Bits changed      : 142/256 (55.47%)
+
+--- HMAC-SHA256 ---
+Original tag      : 6c49e8a73508e7ebb8ae14aa22e03c69225a54759cf06363760a27190631e97b
+Modified tag      : 5ef97473e043fdeb60a0f732449d9e107efe6165c042e6ef78245ab91ba1ed01
+Bits changed      : 112/256 (43.75%)
+
+--- HMAC verification (receiver holds the key) ---
+Original message + original tag : PASS
+Modified message + original tag : FAIL
+
+--- Attacker modifies the message and replaces the checksum ---
+Attacker&#x27;s SHA-256  : a77516c3a66ba61957b0e691cbe3058dc88d393e904f735a3216eb9f7a66cf5a
+Receiver hash check : PASS (tampering NOT detected)
+Attacker&#x27;s HMAC tag : 78030f5b61be0a814821241bd43b4f18a1a583039104eeb9911729cc8821cba5
+Receiver HMAC check : FAIL (tampering detected)
+
+--- Summary ---
+One changed character changes about half the bits of both outputs.
+HMAC verifies the original message and rejects the modified one.
+A plain hash can be recomputed by anyone, so it cannot prove who
+sent the message. HMAC needs the secret key, so only a key holder
+can produce a valid tag: it gives integrity AND authentication.</pre>
+
+</body>
+</html>

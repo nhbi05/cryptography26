@@ -18,19 +18,21 @@ The full brief is in [Takehome_assignment_Cryptology.pdf](Takehome_assignment_Cr
 
 ## Group Members
 
-| # | Name | Registration No. |
-|---|------|------------------|
-| 1 | [Name] | [Registration Number] |
-| 2 | [Name] | [Registration Number] |
-| 3 | [Name] | [Registration Number] |
+**Group 4**
+
+| # | Name | Registration No. | Student No. |
+|---|------|------------------|-------------|
+| 1 | NANSEREKO HOUSNAH | 24/U/09631/EVE | 2400709631 |
+| 2 | SUUNA RAYMOND | 24/U/11403/EVE | 2400711403 |
+| 3 | NABUKEERA SUMAYAH KASWA | 24/U/07899/EVE | 2400707899 |
 
 ## Task Ownership
 
 | Member | Tasks | Folder(s) |
 |--------|-------|-----------|
-| Member 1: [Name / Registration Number] | Task 1 (Theory) + Task 2 (Avalanche) | `task1_theory/`, `task2_avalanche/` |
-| Member 2: [Name / Registration Number] | Task 3 (AES Modes) | `task3_aes_modes/` |
-| Member 3: [Name / Registration Number] | Task 4 (Integrity) + Task 5 (Reflection & Video) | `task4_integrity/`, `task5_reflection/` |
+| NABUKEERA SUMAYAH KASWA (24/U/07899/EVE) | Task 1 (Theory) + Task 2 (Avalanche) | `task1_theory/`, `task2_avalanche/` |
+| NANSEREKO HOUSNAH (24/U/09631/EVE) | Task 3 (AES Modes) | `task3_aes_modes/` |
+| SUUNA RAYMOND (24/U/11403/EVE) | Task 4 (Integrity) + Task 5 (Reflection & Video) | `task4_integrity/`, `task5_reflection/` |
 
 Everyone appears in the video and reviews the final PDF.
 

@@ -1,0 +1,22 @@
+Plaintext: b'Sixteen byte txt'
+Plaintext length: 16 bytes
+
+Original ciphertext:
+9b3f58d7dd6a907062594e39ce8d0451
+
+AES-128 Avalanche Experiment
+--------------------------------------------------
+Bit Flipped    Changed Bits   Percentage     
+0              59             46.09%
+1              63             49.22%
+2              59             46.09%
+3              68             53.12%
+4              73             57.03%
+5              64             50.00%
+6              64             50.00%
+7              59             46.09%
+8              66             51.56%
+9              64             50.00%
+
+Average changed ciphertext bits: 63.9
+Average percentage of changed ciphertext bits: 49.92 %
